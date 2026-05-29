@@ -23,10 +23,13 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const rawText = await response.text();
+    console.log('GEMINI RAW RESPONSE:', rawText);
+    
+    const data = JSON.parse(rawText);
 
     if (data.error) {
-      return res.status(500).json({ error: data.error.message, details: data.error });
+      return res.status(500).json({ error: data.error.message, code: data.error.code });
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '…';

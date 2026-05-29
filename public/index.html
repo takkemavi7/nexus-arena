@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA 2225</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #040810;
+  font-family: 'Share Tech Mono', monospace;
+  color: #a0f0d0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-bg {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,150,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,150,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.scanline {
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* LOGIN */
+#loginScreen {
+  position: relative; z-index: 10;
+  width: 360px;
+  background: rgba(0,20,15,0.95);
+  border: 1px solid rgba(0,200,150,0.3);
+  border-radius: 12px;
+  padding: 36px 32px;
+  text-align: center;
+}
+
+.login-logo { font-size: 13px; color: #00c896; letter-spacing: 3px; margin-bottom: 6px; }
+.login-sub { font-size: 10px; color: #224433; letter-spacing: 2px; margin-bottom: 28px; }
+.login-label { font-size: 10px; color: #006648; letter-spacing: 1px; text-align: left; display: block; margin-bottom: 5px; }
+
+.login-input {
+  width: 100%;
+  background: rgba(0,200,150,0.05);
+  border: 1px solid rgba(0,200,150,0.2);
+  color: #a0f0d0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 5px;
+  outline: none;
+  margin-bottom: 14px;
+}
+.login-input:focus { border-color: #00c896; }
+.login-input::placeholder { color: rgba(100,200,160,0.3); }
+
+.login-btn {
+  width: 100%;
+  background: rgba(0,200,150,0.1);
+  border: 1px solid #00c896;
+  color: #00c896;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; letter-spacing: 2px;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 4px;
+}
+.login-btn:hover { background: rgba(0,200,150,0.2); }
+.login-error { font-size: 11px; color: #f07070; margin-top: 10px; display: none; }
+
+/* MAIN APP */
+#appScreen {
+  display: none;
+  position: relative; z-index: 10;
+  width: 100%;
+  max-width: 860px;
+  padding: 20px;
+}
+
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(0,200,150,0.2);
+  padding-bottom: 12px; margin-bottom: 16px;
+}
+.top-bar .logo { font-size: 11px; color: #00c896; letter-spacing: 2px; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #00c896; margin-right: 6px; animation: blink 1.4s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.logout-btn {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  background: rgba(200,50,50,0.08); border: 1px solid rgba(200,50,50,0.25);
+  color: #f07070; cursor: pointer; padding: 4px 10px; border-radius: 4px;
+}
+.logout-btn:hover { background: rgba(200,50,50,0.18); }
+
+/* SETUP */
+#setupView { }
+
+.topic-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.topic-row input {
+  flex: 1;
+  background: rgba(0,200,150,0.05);
+  border: 1px solid rgba(0,200,150,0.3);
+  color: #a0f0d0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 4px;
+  outline: none;
+}
+.topic-row input:focus { border-color: #00c896; }
+.topic-row input::placeholder { color: rgba(100,200,160,0.35); }
+
+.col-header-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.col-header-row span { font-size: 10px; color: #006648; letter-spacing: 1px; }
+.add-btn-small {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  background: rgba(0,200,150,0.08); border: 1px solid rgba(0,200,150,0.25);
+  color: #00c896; cursor: pointer; padding: 3px 10px; border-radius: 4px;
+}
+.add-btn-small:hover { background: rgba(0,200,150,0.16); }
+
+.setup-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+.agent-card {
+  background: rgba(0,20,15,0.7);
+  border: 1px solid rgba(0,200,150,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.agent-card label { font-size: 10px; color: #006648; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+.agent-card input, .agent-card textarea {
+  width: 100%;
+  background: rgba(0,200,150,0.05);
+  border: 1px solid rgba(0,200,150,0.2);
+  color: #a0f0d0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  outline: none;
+  margin-bottom: 6px;
+}
+.agent-card input:focus, .agent-card textarea:focus { border-color: #00c896; }
+.agent-card input::placeholder, .agent-card textarea::placeholder { color: rgba(100,200,160,0.35); }
+.agent-card textarea { resize: none; height: 52px; line-height: 1.4; }
+.remove-agent-btn {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  background: rgba(200,50,50,0.08); border: 1px solid rgba(200,50,50,0.2);
+  color: #f07070; cursor: pointer; padding: 3px 8px; border-radius: 3px; float: right;
+}
+.remove-agent-btn:hover { background: rgba(200,50,50,0.18); }
+
+.launch-btn {
+  width: 100%; padding: 11px;
+  background: rgba(0,200,150,0.1);
+  border: 1px solid #00c896;
+  color: #00c896;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; letter-spacing: 2px;
+  cursor: pointer; border-radius: 6px;
+  transition: background 0.2s;
+  margin-bottom: 20px;
+}
+.launch-btn:hover { background: rgba(0,200,150,0.2); }
+.launch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ARENA */
+#warehouseScene { display: none; }
+
+.scene-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.scene-title { font-size: 10px; letter-spacing: 2px; color: #006648; }
+.round-badge { font-size: 10px; color: #00c896; background: rgba(0,200,150,0.1); padding: 3px 10px; border-radius: 3px; border: 1px solid rgba(0,200,150,0.2); }
+
+.topic-display { font-size: 11px; color: #336650; margin-bottom: 12px; letter-spacing: 1px; }
+.topic-display span { color: #7abfa0; }
+
+.agents-grid {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: center; margin-bottom: 16px;
+}
+
+.agent-seat {
+  width: 130px;
+  background: rgba(0,20,15,0.8);
+  border: 1px solid rgba(0,200,150,0.2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+.agent-seat.speaking { border-color: #00c896; box-shadow: 0 0 12px rgba(0,200,150,0.15); }
+.agent-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  border: 1px solid rgba(0,200,150,0.3);
+  background: rgba(0,40,30,0.6);
+}
+.agent-seat.speaking .agent-avatar { border-color: #00c896; animation: pulse-av 1s infinite; }
+@keyframes pulse-av { 0%,100%{box-shadow:0 0 0 0 rgba(0,200,150,0.3)} 50%{box-shadow:0 0 0 6px rgba(0,200,150,0)} }
+.agent-name-label { font-size: 11px; color: #a0f0d0; margin-bottom: 2px; }
+.agent-role-label { font-size: 9px; color: #006648; letter-spacing: 1px; }
+.speaking-indicator { font-size: 9px; color: #00c896; margin-top: 4px; display: none; }
+.agent-seat.speaking .speaking-indicator { display: block; }
+
+.chat-feed {
+  background: rgba(0,10,8,0.7);
+  border: 1px solid rgba(0,200,150,0.15);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  scroll-behavior: smooth;
+}
+.chat-feed::-webkit-scrollbar { width: 4px; }
+.chat-feed::-webkit-scrollbar-thumb { background: rgba(0,200,150,0.3); border-radius: 2px; }
+
+.msg { margin-bottom: 14px; animation: fadein 0.4s ease; }
+@keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.msg-avatar { font-size: 14px; }
+.msg-name { font-size: 11px; color: #00c896; }
+.msg-role { font-size: 9px; color: #006648; letter-spacing: 1px; }
+.msg-time { font-size: 9px; color: #334; margin-left: auto; }
+.msg-body { font-size: 12px; color: #7abfa0; line-height: 1.6; padding-left: 22px; }
+
+.typing-indicator { font-size: 11px; color: #336650; margin-bottom: 8px; min-height: 18px; }
+.typing-dots { display: inline-block; }
+
+.controls-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.ctrl-btn {
+  font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer;
+  border-radius: 4px; padding: 7px 14px;
+  border: 1px solid rgba(0,200,150,0.3);
+  background: rgba(0,200,150,0.07);
+  color: #00c896; transition: background 0.2s;
+}
+.ctrl-btn:hover { background: rgba(0,200,150,0.15); }
+.ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.ctrl-btn.danger { color: #f07070; border-color: rgba(200,50,50,0.3); background: rgba(200,50,50,0.07); }
+.ctrl-btn.danger:hover { background: rgba(200,50,50,0.15); }
+.round-counter { font-size: 11px; color: #336650; margin-left: auto; }
+.empty-feed { font-size: 11px; color: #223; text-align: center; padding: 30px; }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">◈ NEXUS ARENA</div>
+  <div class="login-sub">SECURE ACCESS · 2225</div>
+  <label class="login-label">KULLANICI ADI</label>
+  <input class="login-input" id="loginUser" type="text" placeholder="kullanıcı adı" autocomplete="off" />
+  <label class="login-label">ŞİFRE</label>
+  <input class="login-input" id="loginPass" type="password" placeholder="şifre" />
+  <button class="login-btn" onclick="doLogin()">▶ GİRİŞ YAP</button>
+  <div class="login-error" id="loginError">Hatalı kullanıcı adı veya şifre.</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen">
+  <div class="top-bar">
+    <span class="logo">◈ NEXUS ARENA — 2225 &nbsp;<span class="status-dot"></span></span>
+    <button class="logout-btn" onclick="doLogout()">ÇIKIŞ</button>
+  </div>
+
+  <!-- SETUP -->
+  <div id="setupView">
+    <div class="topic-row">
+      <input id="topicInput" placeholder="Tartışma konusunu gir… örn: 'Mars'a kolonileşmeli miyiz?'" />
+    </div>
+    <div class="col-header-row">
+      <span>AJANLAR</span>
+      <button class="add-btn-small" onclick="addAgentCard()">+ AJAN EKLE</button>
+    </div>
+    <div class="setup-panel" id="agentSetup"></div>
+    <button class="launch-btn" onclick="launchArena()" id="launchBtn">⚡ TARTIŞMAYI BAŞLAT</button>
+  </div>
+
+  <!-- ARENA -->
+  <div id="warehouseScene">
+    <div class="scene-header">
+      <span class="scene-title">DEPO SEKTÖR 7 · CANLI TARTIŞMA</span>
+      <span class="round-badge" id="roundBadge">TUR 1</span>
+    </div>
+    <div class="topic-display" id="topicDisplay"></div>
+    <div class="agents-grid" id="agentsGrid"></div>
+    <div class="chat-feed" id="chatFeed">
+      <div class="empty-feed">Ajanlar hazırlanıyor…</div>
+    </div>
+    <div class="typing-indicator" id="typingIndicator"></div>
+    <div class="controls-row">
+      <button class="ctrl-btn" onclick="nextRound()" id="nextRoundBtn">▶ SONRAKİ TUR</button>
+      <button class="ctrl-btn" onclick="pauseDiscussion()" id="pauseBtn">⏸ DURAKLAT</button>
+      <button class="ctrl-btn danger" onclick="resetArena()">✕ SIFIRLA</button>
+      <span class="round-counter" id="roundCounter"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================
+// KULLANICI ADI VE ŞİFRE
+// Buraya kendi bilgilerini yaz:
+const VALID_USERNAME = "KULLANICI_ADINIZI_YAZIN";
+const VALID_PASSWORD = "SIFRENIZI_YAZIN";
+// =====================
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === VALID_USERNAME && p === VALID_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    initSetup();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+const AVATARS = ['🤖','👾','🧬','🔮','🛸','⚙️','🧠','💎','🌀','⚡'];
+const COLORS = ['#00c896','#7a8fff','#ff8c69','#f0c040','#c080ff','#60d0ff','#ff7ab0','#80ffb0'];
+let agents = [], agentCardCount = 0, discussion = [], currentRound = 1, isPaused = false, roundInProgress = false;
+
+const defaultAgents = [
+  { name: 'AXIOM-7', role: 'Filozof', personality: 'Derin düşünür. Her şeyi sorgular. Antik bilgelik ve fütürist teoriden ilham alır.', emoji: '🔮' },
+  { name: 'NOVA-X', role: 'Bilim İnsanı', personality: 'Kanıt odaklı. Veri ve araştırma gösterir. Şüpheci ama açık fikirli.', emoji: '🧬' },
+  { name: 'RAZE-3', role: 'Şeytan\'ın Avukatı', personality: 'Her pozisyona meydan okur. Kışkırtıcı. Kolay kabul etmez.', emoji: '👾' },
+];
+
+function initSetup() {
+  document.getElementById('agentSetup').innerHTML = '';
+  agents = []; agentCardCount = 0;
+  defaultAgents.forEach(a => addAgentCard(a));
+}
+
+function addAgentCard(preset = null) {
+  const id = agentCardCount++;
+  const emoji = preset?.emoji || AVATARS[id % AVATARS.length];
+  const container = document.getElementById('agentSetup');
+  const div = document.createElement('div');
+  div.className = 'agent-card';
+  div.id = `acard-${id}`;
+  div.innerHTML = `
+    <button class="remove-agent-btn" onclick="removeAgentCard(${id})">✕ SİL</button>
+    <label>AJAN ${id+1}</label>
+    <input id="aname-${id}" placeholder="İsim (örn: AXIOM-7)" value="${preset?.name||''}" />
+    <input id="arole-${id}" placeholder="Rol (örn: Filozof)" value="${preset?.role||''}" />
+    <textarea id="apersonality-${id}" placeholder="Kişilik ve stil…">${preset?.personality||''}</textarea>
+    <div style="font-size:10px;color:#336650;margin-top:2px">AVATAR: <input id="aemoji-${id}" value="${emoji}" style="width:38px;display:inline-block;text-align:center;padding:2px 4px;margin-left:6px;background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.2);color:#a0f0d0;border-radius:3px;font-size:12px"></div>
+  `;
+  container.appendChild(div);
+}
+
+function removeAgentCard(id) {
+  const el = document.getElementById(`acard-${id}`);
+  if (el) el.remove();
+}
+
+function getAgentConfigs() {
+  const configs = [];
+  document.querySelectorAll('[id^="acard-"]').forEach(card => {
+    const id = card.id.replace('acard-','');
+    const name = document.getElementById(`aname-${id}`)?.value.trim();
+    const role = document.getElementById(`arole-${id}`)?.value.trim();
+    const personality = document.getElementById(`apersonality-${id}`)?.value.trim();
+    const emoji = document.getElementById(`aemoji-${id}`)?.value.trim() || '🤖';
+    if (name) configs.push({ name, role, personality, emoji, id: parseInt(id) });
+  });
+  return configs;
+}
+
+function launchArena() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Önce bir konu gir!'); return; }
+  agents = getAgentConfigs();
+  if (agents.length < 2) { alert('En az 2 ajan ekle!'); return; }
+  document.getElementById('setupView').style.display = 'none';
+  document.getElementById('warehouseScene').style.display = 'block';
+  discussion = []; currentRound = 1; isPaused = false;
+  document.getElementById('topicDisplay').innerHTML = `KONU: <span>${topic}</span>`;
+  document.getElementById('roundBadge').textContent = 'TUR 1';
+  document.getElementById('roundCounter').textContent = '';
+  renderAgentSeats();
+  document.getElementById('chatFeed').innerHTML = '<div class="empty-feed">Ajanlar hazırlanıyor…</div>';
+  setTimeout(() => runRound(topic), 600);
+}
+
+function renderAgentSeats() {
+  const grid = document.getElementById('agentsGrid');
+  grid.innerHTML = '';
+  agents.forEach((a, i) => {
+    const color = COLORS[i % COLORS.length];
+    const seat = document.createElement('div');
+    seat.className = 'agent-seat';
+    seat.id = `seat-${a.id}`;
+    seat.innerHTML = `
+      <div class="agent-avatar" style="border-color:${color}44">${a.emoji}</div>
+      <div class="agent-name-label" style="color:${color}">${a.name}</div>
+      <div class="agent-role-label">${a.role || 'AJAN'}</div>
+      <div class="speaking-indicator">● AKTARIM</div>
+    `;
+    grid.appendChild(seat);
+  });
+}
+
+function setSpeaking(agentId, active) {
+  document.querySelectorAll('.agent-seat').forEach(s => s.classList.remove('speaking'));
+  const typingEl = document.getElementById('typingIndicator');
+  if (agentId !== null && active) {
+    const seat = document.getElementById(`seat-${agentId}`);
+    if (seat) seat.classList.add('speaking');
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) typingEl.innerHTML = `${agent.emoji} <span style="color:#00c896">${agent.name}</span> iletim yapıyor<span class="typing-dots" id="tdots">...</span>`;
+    dotAnim();
+  } else {
+    typingEl.innerHTML = '';
+  }
+}
+
+let dotInterval = null;
+function dotAnim() {
+  if (dotInterval) clearInterval(dotInterval);
+  const dots = ['...','.. ','   ','.  '];
+  let i = 0;
+  dotInterval = setInterval(() => {
+    const el = document.getElementById('tdots');
+    if (el) el.textContent = dots[i++ % dots.length];
+    else clearInterval(dotInterval);
+  }, 400);
+}
+
+function addMessage(agent, text, color) {
+  const feed = document.getElementById('chatFeed');
+  const empties = feed.querySelectorAll('.empty-feed');
+  empties.forEach(e => e.remove());
+  const ts = new Date().toLocaleTimeString('tr-TR',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const msg = document.createElement('div');
+  msg.className = 'msg';
+  msg.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-avatar">${agent.emoji}</span>
+      <span class="msg-name" style="color:${color}">${agent.name}</span>
+      <span class="msg-role">${agent.role||'AJAN'}</span>
+      <span class="msg-time">${ts}</span>
+    </div>
+    <div class="msg-body">${text}</div>
+  `;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+async function callGemini(systemPrompt, userPrompt) {
+  const resp = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt, user: userPrompt })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error);
+  return data.text;
+}
+
+async function runRound(topic) {
+  if (roundInProgress) return;
+  roundInProgress = true;
+  document.getElementById('nextRoundBtn').disabled = true;
+
+  const historyText = discussion.slice(-12).map(m => `${m.name} (${m.role}): ${m.text}`).join('\n');
+
+  for (let i = 0; i < agents.length; i++) {
+    if (isPaused) { roundInProgress = false; document.getElementById('nextRoundBtn').disabled = false; return; }
+    const agent = agents[i];
+    const color = COLORS[i % COLORS.length];
+    setSpeaking(agent.id, true);
+
+    const otherAgents = agents.filter(a => a.id !== agent.id).map(a => `- ${a.name} (${a.role})`).join('\n');
+    const sys = `Sen ${agent.name}'sın, 2225 yılında fütüristik bir depo tartışma arenasında ${agent.role} rolündesin. Kişiliğin: ${agent.personality || 'Düşünceli ve doğrudan.'}
+Birlikte tartışma yaptığın diğer ajanlar:
+${otherAgents}
+Yanıtını 2-4 cümleyle sınırla. Karakterine uygun konuş. Eğer önceki konuşma varsa ona tepki ver. Kendini tanıtma — direkt konuş.`;
+
+    const usr = `KONU: ${topic}\n\nÖNCEKİ TARTIŞMA:\n${historyText || '(İlk konuşmayı sen başlatıyorsun)'}\n\nŞimdi katkını yap.`;
+
+    try {
+      const reply = await callGemini(sys, usr);
+      discussion.push({ name: agent.name, role: agent.role, text: reply });
+      setSpeaking(agent.id, false);
+      addMessage(agent, reply, color);
+    } catch(e) {
+      setSpeaking(agent.id, false);
+      addMessage(agent, '[iletim hatası — API anahtarını kontrol et]', color);
+    }
+    await new Promise(r => setTimeout(r, 700));
+  }
+
+  if (dotInterval) clearInterval(dotInterval);
+  setSpeaking(null, false);
+  currentRound++;
+  document.getElementById('roundBadge').textContent = `TUR ${currentRound}`;
+  document.getElementById('roundCounter').textContent = `${discussion.length} iletim`;
+  document.getElementById('nextRoundBtn').disabled = false;
+  roundInProgress = false;
+}
+
+function nextRound() {
+  if (roundInProgress) return;
+  const topic = document.getElementById('topicDisplay').querySelector('span')?.textContent || '';
+  isPaused = false;
+  runRound(topic);
+}
+
+function pauseDiscussion() {
+  isPaused = !isPaused;
+  document.getElementById('pauseBtn').textContent = isPaused ? '▶ DEVAM ET' : '⏸ DURAKLAT';
+  if (!isPaused && !roundInProgress) nextRound();
+}
+
+function resetArena() {
+  isPaused = true; roundInProgress = false; discussion = []; currentRound = 1;
+  if (dotInterval) clearInterval(dotInterval);
+  document.getElementById('warehouseScene').style.display = 'none';
+  document.getElementById('setupView').style.display = 'block';
+  initSetup();
+}
+</script>
+</body>
+</html>

@@ -4,12 +4,8 @@ export default async function handler(req, res) {
   }
 
   const { system, user } = req.body;
-
-  if (!system || !user) {
-    return res.status(400).json({ error: 'Missing system or user prompt' });
-  }
-
   const apiKey = process.env.GEMINI_API_KEY;
+
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
   }
@@ -21,8 +17,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts: [{ text: user }] }],
+          contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
           generationConfig: { maxOutputTokens: 300, temperature: 0.9 }
         })
       }
@@ -31,7 +26,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.error) {
-      return res.status(500).json({ error: data.error.message });
+      return res.status(500).json({ error: data.error.message, details: data.error });
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '…';
